@@ -1,0 +1,236 @@
+---
+import { WA } from '../data/products.js';
+
+interface Variant {
+  key: string; label: string; color?: string; badge?: string; imgs: string[];
+}
+interface Props {
+  product: {
+    id: number; name: string; cat: string; desc: string;
+    badge?: string;
+    imgs?: string[];
+    variants?: Variant[];
+    pricing: Array<{ qty: string; price: string; unit: string; best?: boolean; note?: string }>;
+  };
+  index: number;
+}
+
+const { product: p, index } = Astro.props;
+const isEven       = index % 2 === 0;
+const hasVariants  = !!p.variants?.length;
+const initialImgs  = hasVariants ? p.variants![0].imgs : (p.imgs ?? []);
+const initialBadge = hasVariants ? p.variants![0].badge : p.badge;
+
+const initialWaMsg = hasVariants
+  ? encodeURIComponent(`Hola! Me interesa la Caja Organizadora modelo ${p.variants![0].label}. ¿Tenés disponibilidad?`)
+  : encodeURIComponent(`Hola! Me interesa "${p.name}". ¿Tenés disponibilidad?`);
+const waLink = `https://wa.me/${WA}?text=${initialWaMsg}`;
+---
+
+<article
+  class={`product-item flex flex-col md:grid md:min-h-[300px] lg:min-h-[340px] ${isEven ? 'md:grid-cols-[50%_1fr]' : 'md:grid-cols-[1fr_50%]'}`}
+  data-cat={p.cat}
+  style={`animation-delay:${index * 90}ms`}
+>
+
+  <!-- ── CAROUSEL ── -->
+  <div class={`relative group/photo ${isEven ? '' : 'md:order-2'}`}>
+
+    <div class="carousel overflow-x-auto scrollbar-none snap-x snap-mandatory flex w-full aspect-square md:aspect-auto md:h-full cursor-pointer">
+      {initialImgs.map((src, i) => (
+        <div class="snap-center shrink-0 w-full h-full bg-paper flex items-center justify-center p-5 md:p-8">
+          <img
+            class="w-full h-full object-contain select-none"
+            src={src}
+            alt={i === 0 ? p.name : `${p.name} — foto ${i + 1}`}
+            loading="lazy"
+            draggable="false"
+          />
+        </div>
+      ))}
+    </div>
+
+    <!-- Flechas -->
+    <button class="carousel-prev absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center transition-all duration-150 hover:bg-white hover:scale-105 active:scale-95" aria-label="Anterior">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="carousel-next absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center transition-all duration-150 hover:bg-white hover:scale-105 active:scale-95" aria-label="Siguiente">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+
+    <!-- Dots -->
+    <div class="dots-wrap absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
+      {initialImgs.map((_, i) => (
+        <span class={`dot ${i === 0 ? 'active' : ''}`}></span>
+      ))}
+    </div>
+  </div>
+
+  <!-- ── INFO ── -->
+  <div class={`flex flex-col justify-center px-5 py-7 md:py-10 md:px-10 lg:px-14 ${isEven ? '' : 'md:order-1'}`}>
+
+    <p class="font-mono text-[0.58rem] tracking-[0.28em] uppercase text-gold mb-3">{p.cat}</p>
+
+    <!-- Selector de variantes -->
+    {hasVariants && (
+      <div class="flex flex-wrap gap-2 mb-4">
+        {p.variants!.map((v, i) => (
+          <button
+            class={`variant-btn flex items-center gap-1.5 font-mono text-[0.65rem] tracking-[0.1em] uppercase px-3 py-1.5 rounded-full border transition-all duration-150 cursor-pointer ${i === 0 ? 'active' : 'border-cream-dark text-ink-soft hover:border-gold hover:text-ink'}`}
+            data-imgs={JSON.stringify(v.imgs)}
+            data-badge={v.badge ?? ''}
+            data-wa={encodeURIComponent(`Hola! Me interesa la Caja Organizadora modelo ${v.label}. ¿Tenés disponibilidad?`)}
+          >
+            <span
+              class="w-3 h-3 rounded-full shrink-0 ring-1 ring-ink/10"
+              style={`background:${v.color ?? '#ccc'}`}
+            ></span>
+            {v.label}
+          </button>
+        ))}
+      </div>
+    )}
+
+    <h2 class="font-display text-[2.4rem] md:text-[2.8rem] lg:text-[3.2rem] leading-none tracking-wide text-ink uppercase mb-3">
+      {p.name}
+    </h2>
+
+    <p class="font-body text-[0.93rem] leading-relaxed text-ink-soft mb-6">{p.desc}</p>
+
+    <!-- Precios -->
+    <div class="border-t border-cream-dark mb-5">
+      {p.pricing.map(r => (
+        <div class="flex items-center justify-between py-3 border-b border-cream-dark last:border-b-0 gap-3">
+          <div class="flex items-baseline gap-3">
+            <span class="font-mono text-[0.7rem] tracking-wide text-ink-dim w-7 shrink-0">{r.qty}</span>
+            <span class={`font-display text-[2rem] leading-none tracking-wide ${r.best ? 'text-gold' : 'text-ink'}`}>{r.price}</span>
+          </div>
+          <div class="flex flex-col items-end gap-1 text-right">
+            <span class="font-mono text-[0.63rem] text-ink-dim">{r.unit}</span>
+            {r.best && <span class="font-mono text-[0.55rem] tracking-[0.1em] uppercase border border-gold text-gold px-1.5 py-0.5 rounded-sm whitespace-nowrap">Mejor precio</span>}
+            {r.note && <span class="font-mono text-[0.58rem] text-ink-dim italic">{r.note}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- WhatsApp -->
+    <a
+      href={waLink}
+      target="_blank" rel="noopener"
+      class="wa-btn flex items-center justify-center gap-2.5 font-display text-[1.1rem] tracking-[0.1em] uppercase py-3.5 px-5 bg-wa text-white rounded hover:bg-green-700 active:scale-[0.98] transition-all duration-150 min-h-[52px] select-none"
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 shrink-0" aria-hidden="true">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+      Pedir por WhatsApp
+    </a>
+  </div>
+
+</article>
+
+<style>
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .product-item { opacity: 0; animation: slideUp 0.5s ease forwards; }
+
+  .dot {
+    display: block; width: 6px; height: 6px;
+    border-radius: 9999px;
+    background: rgba(28,20,16,.25);
+    transition: width .25s ease, background .25s ease;
+  }
+  .dot.active { width: 16px; background: #B45309; }
+
+  .variant-btn.active {
+    background: #B45309;
+    border-color: #B45309;
+    color: #FDFCF7;
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('article.product-item').forEach(article => {
+    const photoSection = article.querySelector<HTMLElement>('.group\\/photo')!;
+    const carousel     = article.querySelector<HTMLElement>('.carousel')!;
+    const dotsWrap     = article.querySelector<HTMLElement>('.dots-wrap')!;
+    const prevBtn      = article.querySelector<HTMLButtonElement>('.carousel-prev')!;
+    const nextBtn      = article.querySelector<HTMLButtonElement>('.carousel-next')!;
+    const waBtn        = article.querySelector<HTMLAnchorElement>('.wa-btn');
+
+    const getImgs = () => carousel.querySelectorAll<HTMLImageElement>('img');
+    const currentIdx = () => Math.round(carousel.scrollLeft / carousel.offsetWidth);
+
+    function updateDots(i: number) {
+      dotsWrap.querySelectorAll<HTMLElement>('.dot')
+        .forEach((d, idx) => d.classList.toggle('active', idx === i));
+    }
+
+    function scrollTo(i: number) {
+      carousel.scrollTo({ left: i * carousel.offsetWidth, behavior: 'smooth' });
+    }
+
+    function loadVariant(imgs: string[]) {
+      // Reemplazar slides
+      carousel.innerHTML = '';
+      imgs.forEach((src, i) => {
+        const slide = document.createElement('div');
+        slide.className = 'snap-center shrink-0 w-full h-full bg-paper flex items-center justify-center p-5 md:p-8';
+        const img = document.createElement('img');
+        img.className = 'w-full h-full object-contain select-none';
+        img.src = src;
+        img.alt = `Foto ${i + 1}`;
+        img.draggable = false;
+        slide.appendChild(img);
+        carousel.appendChild(slide);
+      });
+      carousel.scrollLeft = 0;
+      // Reconstruir dots
+      dotsWrap.innerHTML = '';
+      imgs.forEach((_, i) => {
+        const dot = document.createElement('span');
+        dot.className = `dot${i === 0 ? ' active' : ''}`;
+        dotsWrap.appendChild(dot);
+      });
+    }
+
+    // Scroll → dots
+    carousel.addEventListener('scroll', () => updateDots(currentIdx()), { passive: true });
+
+    // Flechas
+    prevBtn?.addEventListener('click', e => {
+      e.stopPropagation();
+      scrollTo((currentIdx() - 1 + getImgs().length) % getImgs().length);
+    });
+    nextBtn?.addEventListener('click', e => {
+      e.stopPropagation();
+      scrollTo((currentIdx() + 1) % getImgs().length);
+    });
+
+    // Lightbox
+    carousel.addEventListener('click', () => {
+      const img = getImgs()[currentIdx()];
+      (window as any).openLightbox?.(img?.src, img?.alt);
+    });
+
+    // Selector de variantes
+    const variantBtns = article.querySelectorAll<HTMLButtonElement>('.variant-btn');
+    variantBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        variantBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const imgs = JSON.parse(btn.dataset.imgs ?? '[]') as string[];
+        loadVariant(imgs);
+
+        // Actualizar link WA (preserva el número del href inicial)
+        if (waBtn) {
+          const base = waBtn.href.split('?')[0];
+          waBtn.href = `${base}?text=${btn.dataset.wa ?? ''}`;
+        }
+      });
+    });
+  });
+</script>

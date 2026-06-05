@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+/* ── DESIGN TOKENS ── */
+@theme {
+  --color-paper:      #FDFCF7;
+  --color-cream:      #F4EFE3;
+  --color-cream-dark: #E5DDD0;
+  --color-ink:        #1C1410;
+  --color-ink-soft:   #6B5E52;
+  --color-ink-dim:    #9C8C80;
+  --color-gold:       #B45309;
+  --color-gold-soft:  #FEF3C7;
+  --color-wa:         #16A34A;
+
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body:    'Nunito', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+}
+
+/* ── BASE ── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+}
+
+/* ── UTILITIES ── */
+@layer utilities {
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  .font-display { font-family: var(--font-display); }
+  .font-body    { font-family: var(--font-body); }
+  .font-mono    { font-family: var(--font-mono); }
+}
+
+/* ── LIGHTBOX ── */
+#lightbox {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(20, 15, 10, 0.92);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+#lightbox.open { opacity: 1; pointer-events: all; }
+
+#lb-close {
+  position: absolute; top: 1rem; right: 1.2rem;
+  font-size: 1.5rem; line-height: 1;
+  background: none; border: none;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer; transition: color 0.2s;
+  padding: 0.4rem 0.7rem;
+}
+#lb-close:hover { color: #fff; }
+
+#lb-img {
+  max-width: min(90vw, 800px);
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}

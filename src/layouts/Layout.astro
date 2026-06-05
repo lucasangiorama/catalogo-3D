@@ -1,0 +1,76 @@
+---
+import '../styles/global.css';
+interface Props { title?: string }
+const { title = 'LAYERFORM — Impresión 3D FIFA 26' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Réplicas Copa del Mundo FIFA 26 impresas en 3D. Cajas Messi, figus doradas. Envíos a todo el país.">
+  <title>{title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@300;400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Parallax background blobs -->
+  <div aria-hidden="true" style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;">
+    <div id="blob1" style="position:absolute;width:750px;height:750px;top:-200px;left:-180px;border-radius:50%;background:radial-gradient(circle,rgba(212,170,44,0.32) 0%,transparent 60%);filter:blur(60px);will-change:transform;"></div>
+    <div id="blob2" style="position:absolute;width:600px;height:600px;top:30%;right:-200px;border-radius:50%;background:radial-gradient(circle,rgba(180,83,9,0.22) 0%,transparent 60%);filter:blur(65px);will-change:transform;"></div>
+    <div id="blob3" style="position:absolute;width:550px;height:550px;bottom:-100px;left:25%;border-radius:50%;background:radial-gradient(circle,rgba(212,170,44,0.20) 0%,transparent 60%);filter:blur(70px);will-change:transform;"></div>
+  </div>
+
+  <slot />
+
+  <!-- Lightbox -->
+  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
+    <button id="lb-close" aria-label="Cerrar">✕</button>
+    <img id="lb-img" src="" alt="Producto ampliado">
+  </div>
+</body>
+</html>
+
+<script>
+  // ── Lightbox ──
+  const lb      = document.getElementById('lightbox')!;
+  const lbImg   = document.getElementById('lb-img') as HTMLImageElement;
+  const lbClose = document.getElementById('lb-close')!;
+
+  function openLb(src: string, alt: string) {
+    lbImg.src = src; lbImg.alt = alt;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLb() {
+    lb.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  lb.addEventListener('click', e => { if (e.target === lb || e.target === lbClose) closeLb(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+  (window as any).openLightbox = openLb;
+
+  // ── Parallax blobs ──
+  const blob1 = document.getElementById('blob1')!;
+  const blob2 = document.getElementById('blob2')!;
+  const blob3 = document.getElementById('blob3')!;
+
+  // No parallax en mobile (evita lag en touch)
+  const isMobile = () => window.innerWidth < 768;
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (isMobile() || ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      blob1.style.transform = `translateY(${y * 0.18}px)`;
+      blob2.style.transform = `translateY(${y * -0.12}px)`;
+      blob3.style.transform = `translateY(${y * 0.08}px)`;
+      ticking = false;
+    });
+  }, { passive: true });
+</script>
